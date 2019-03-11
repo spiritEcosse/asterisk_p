@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load i18n static bootstrap3 %}
+{% load func_office %}
+
+{% block css %}
+    <link href="{% static "css/style.css" %}" rel="stylesheet">
+    <style type="text/css">
+        .container {
+            width: 100%;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{% trans 'Schedule' %}{% endblock %}
+
+{% block js %}
+    <script>
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie != '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    // Only send the token to relative URLs i.e. locally.
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+        $(document).on('click', '#edit', function (e) {
+            $('.edit').prop('disabled', false);
+        })
+        $(document).on('click', '#save', function (e) {
+            $('.edit').prop('disabled', true);
+        })
+        $(document).on('change','.select_pos', function (e) {
+            if ($(this).val() === '') return
+            input_id = $(this).parent().find('input[name=id]')
+
+            if (input_id.val() !== '') {
+                url =  '/schedule_update/' + input_id.val() + '/'
+            } else {
+                url = {% url 'office:schedule' %}
+            }
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: $(this).parent().serialize(),
+                success: function(data) {
+                    if (input_id.val() === '') {
+                        input_id.val(data.id)
+                    }
+                },
+                dataType: "json"
+            });
+        });
+
+        $(document).ready(function() {
+            $('#example').dataTable({
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": false,
+                "bInfo": false,
+                "ordering": false,
+                "info":     false,
+                "bAutoWidth": false });
+        });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <div class="col-xs-12 text-right wrapper_form">
+        <a href="{% url 'office:list' %}" class="btn btn-success">{% trans 'Back' %}</a>
+        <button class="btn btn-warning" id="edit">{% trans 'Edit' %}</button>
+        <button id="save" class="btn btn-danger">{% trans 'Save' %}</button>
+    </div>
+
+    <table id="example" class="display dataTable no-footer">
+        <thead>
+        <tr>
+            <th>{% trans "Full Name" %} / {{ date_select|date:"Y-F" }}</th>
+            {% for date in days %}
+                <th>{{ date|day_name }} </br>{{ date.day }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+
+        {% for user in users %}
+            <tr>
+                <td>{{ user.last_name }}</td>
+
+                {% for date in days %}
+                    <td>
+                        <form>
+                            {% exist_schedule user=user date=date as obj %}
+                            <input name="id" value="{{ obj.id }}" type="hidden">
+                            <input name="date" value="{{ date|date:"Y-m-d" }}" type="hidden">
+                            <input name="user" value="{{ user.id }}" type="hidden">
+                            <select name="position" class="select_pos
+                                {% if date.weekday != 6 %}
+                                    edit
+                                {% endif %}
+                                " disabled>
+                                {% for key, value in view.model.POSITIONS %}
+                                    <option value="{{ key }}"
+                                            {% if obj and obj.position == key %}
+                                            selected
+                                            {% endif %}
+                                    >{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+    <br/>
+    <div class="col-xs-6">
+        <a href="?date={{ prev|date:"Y-m" }}"><span class="glyphicon glyphicon-chevron-left"></span></a>
+    </div>
+    <div class="col-xs-6 text-right">
+        <a href="?date={{ next|date:"Y-m" }}"><span class="glyphicon glyphicon-chevron-right"></span></a>
+    </div>
+{% endblock %}

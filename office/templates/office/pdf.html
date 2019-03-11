@@ -1,0 +1,32 @@
+{% extends "easy_pdf/base.html" %}
+{% load i18n %}
+
+{% block extra_style %}
+    <style type="text/css">
+        @font-face { font-family: Tahoma; src: url(/static_root/fonts/Tahoma.ttf); }
+        body {
+            font-family: Tahoma, 'sans-serif';
+            color: #333333;
+            border: 1px solid #ddd;
+            text-align: center;
+            padding-top: 3px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!DOCTYPE html>
+    <html lang="ua">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% trans 'Report' %}</title>
+    </head>
+    <body>
+
+    <div class="container">
+        {% include 'office/useroffice_list_table.html' %}
+    </div>
+
+    </body>
+    </html>
+{% endblock %}

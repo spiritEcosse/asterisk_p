@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans 'Office' %}{% endblock %}
+
+{% block css %}
+    <link href="{% static "css/useroffice_detail.css" %}" rel="stylesheet">
+    <link href="{% static "css/style.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="card text-center">
+                <form action="" method="post" class="form_status">
+                    {% csrf_token %}
+                    {{ form }}
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">{{ user.useroffice.number }}</li>
+                        <li class="list-group-item">{{ user.first_name }} {{ user.last_name }}</li>
+                        <li class="list-group-item">
+                            {% trans 'Status' %}:
+                            <span class="status_user
+                            {% if user.useroffice.current_action == view.model.ACTIONS.1.0 %}
+                                status_user--inactive
+                            {% elif  user.useroffice.current_action == view.model.ACTIONS.3.0 or user.useroffice.current_action == view.model.ACTIONS.0.0 %}
+                                status_user--active
+                            {% elif  user.useroffice.current_action == view.model.ACTIONS.2.0 %}
+                                status_user--wait
+                            {% endif %}"
+                            ></span>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                    {% if user.useroffice.current_action == view.model.ACTIONS.0.0 or user.useroffice.current_action != view.model.ACTIONS.1.0 %}
+                                        disabled
+                                    {% endif %}
+                                        data-type_status="{{ view.model.ACTIONS.0.0 }}" class="btn change_status btn-block btn-success">
+                                {{ view.model.ACTIONS.0.1 }}
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                    {% if user.useroffice.current_action == view.model.ACTIONS.1.0 or user.useroffice.current_action == view.model.ACTIONS.2.0 %}
+                                        disabled
+                                    {% endif %}
+                                        data-type_status="{{ view.model.ACTIONS.1.0 }}" class="btn btn-block change_status btn-danger">
+                                {{ view.model.ACTIONS.1.1 }}
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                    {% if user.useroffice.current_action == view.model.ACTIONS.2.0 or user.useroffice.current_action == view.model.ACTIONS.1.0 %}
+                                        disabled
+                                    {% endif %}
+                                        data-type_status="{{ view.model.ACTIONS.2.0 }}" class="btn change_status btn-block btn-warning">
+                                {{ view.model.ACTIONS.2.1 }}
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <button
+                                    {% if user.useroffice.current_action == view.model.ACTIONS.3.0 or user.useroffice.current_action == view.model.ACTIONS.1.0 or user.useroffice.current_action == view.model.ACTIONS.0.0 %}
+                                        disabled
+                                    {% endif %}
+                                        data-type_status="{{ view.model.ACTIONS.3.0 }}" class="btn change_status btn-block btn-success">
+                                {{ view.model.ACTIONS.3.1 }}
+                            </button>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'password_change' %}" class="btn btn-block btn-primary">
+                                {% trans 'Change my password' %}
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a type="button" href="{% url 'logout' %}" class="btn btn-block btn-primary">{% trans 'Log out' %}</a>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            <div class="card">
+                <ul class="list-group list-group-flush">
+                    {% for obj in object_list %}
+                        <li class="list-group-item">
+                            {{ obj.date_created|date:"H:i" }}
+
+                            {% if obj.type_action == 0 %}
+                                {% trans "You joined the queue. SIP channel is activated." %}
+                            {% elif obj.type_action == 1 %}
+                                {% trans "You are off the queue. SIP channel is deactivated." %}
+                            {% elif obj.type_action == 2 %}
+                                {% trans "The queue is paused." %}
+                            {% elif obj.type_action == 3 %}
+                                {% trans "Queue restored." %}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+
+{% block js %}
+    <script>
+        $(document).on('click','.change_status', function () {
+            $('#id_type_action').val($(this).data('type_status'))
+        })
+
+        $(document).on('submit','.form_status',function (e) {
+            e.preventDefault()
+            const type_action = this.type_action
+            if(type_action.value !== '') {
+                const data = new FormData(this)
+                $.ajax({
+                    type:'POST',
+                    url:'.',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function () {
+                        window.location.reload()
+                    },
+                    error: function () {
+                        console.log('error')
+                    }
+                })
+            } else {
+                alert('Нажмiть кнопку "Приєднатися"')
+            }
+        })
+    </script>
+{% endblock js %}

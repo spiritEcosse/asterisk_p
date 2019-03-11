@@ -1,0 +1,12 @@
+.idea/
+*.pyc
+static_root/
+celerybeat.pid
+celerybeat-schedule
+celerybeat-schedule.db
+static/admin/
+logs/
+__pycache__/
+asterisk/settings.py
+migrations/
+*.pdf

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load i18n static bootstrap3 %}
+{% load func_office %}
+
+{% block css %}
+    <link href="{% static "css/style.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}{% trans 'Office' %}{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="col-xs-12 wrapper_form">
+                <form class="form-inline form_item pull-left" action="." method="get">
+                    {% bootstrap_form form %}
+                    <button type="submit" class="btn btn-secondary">{% trans 'Filter' %}</button>
+                    <a href="{% url 'office:schedule' %}" class="btn btn-success">{% trans 'Schedule' %}</a>
+                </form>
+
+                <form class="form-inline pull-left" action="" method="post">
+                    {% csrf_token %}
+                    <button class="btn btn-primary">{% trans 'Report' %}</button>
+                </form>
+                <div class="pull-right">
+                    <a href="{% url 'logout' %}" class="btn btn-danger">{% trans 'Log out' %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'office/useroffice_list_table.html' %}
+{% endblock main %}
+
+{% block js %}
+    <script>
+        $(document).on('click', '.more', function (e) {
+            $(this).find('.ui-icon').toggleClass('ui-icon-caret-1-n')
+            $(this).find('.ui-icon').toggleClass('ui-icon-caret-1-s')
+            $(this).parent().find('.expando').toggleClass('expando--show')
+        })
+
+        $(function () {
+            $.datepicker.setDefaults($.datepicker.regional['uk']);
+        })
+
+        $(document).ready(function () {
+            $('#id_id__in').multiselect({
+                buttonText: function (options, select) {
+                    return "{% trans 'Select' %}";
+                },
+                buttonTitle: function (options, select) {
+                    var labels = [];
+                    options.each(function () {
+                        labels.push($(this).text());
+                    });
+                    return labels.join(' - ');
+                }
+            });
+            $("#id_date_created_gte").datepicker({
+                    dateFormat: "yy-mm-dd"
+                }
+            );
+            $("#id_date_created_lte").datepicker({
+                    dateFormat: "yy-mm-dd"
+                }
+            );
+
+            $('#example').DataTable({
+                searching: false,
+                order: false,
+                pageLength: 20,
+                dom: '<f<t>ip>',
+                "language": {
+                    "url": "{% static "Ukrainian.json" %}",
+                }
+            });
+        });
+    </script>
+{% endblock js %}

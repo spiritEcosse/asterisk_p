@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: "reports"
+      POSTGRES_USER: "reports"
+      POSTGRES_DB: "reports"
+      PGDATA: "/var/lib/postgresql/data/db/"
+      TZ: "Europe/Kiev"
+    volumes:
+      - db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: python3 manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: asterisk.settings
+    volumes:
+      - .:/code
+      - ~/.ipython:/root/.ipython
+    ports:
+      - "8092:8000"
+    depends_on:
+      - db
+
+  queue:
+    image: rabbitmq:management
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - TZ=Europe/Kiev
+    ports:
+      - "2:15672"
+
+  beat:
+    build: .
+    environment:
+      DJANGO_SETTINGS_MODULE: asterisk.settings
+    command: celery beat --app=asterisk -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - queue
+
+  worker:
+    build: .
+    environment:
+      DJANGO_SETTINGS_MODULE: asterisk.settings
+    command: celery worker --app=asterisk -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - queue
+
+  flower:
+    build: .
+    environment:
+      DJANGO_SETTINGS_MODULE: asterisk.settings
+    command: celery flower --app=asterisk
+    ports:
+     - "6:5555"
+    volumes:
+      - .:/code
+    depends_on:
+      - beat
+
+volumes:
+  db:
