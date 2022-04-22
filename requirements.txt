@@ -32,7 +32,7 @@ psycopg2-binary==2.7.5
 ptyprocess==0.6.0
 pycparser==2.19
 Pygments==2.2.0
-PyPDF2==1.26.0
+PyPDF2==1.27.5
 Pyphen==0.9.5
 python-dateutil==2.7.3
 pytz==2018.5
